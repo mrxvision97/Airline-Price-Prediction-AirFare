@@ -8,8 +8,7 @@ from datetime import datetime
 model_pipeline = joblib.load("model_pipeline.pkl")
 
 app = Flask(__name__)
-CORS(app) 
-
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 bins = [0, 6, 12, 18, 24]
 labels = ['Night', 'Morning', 'Afternoon', 'Evening']
@@ -32,12 +31,19 @@ route_distances = {
     'Ahmedabad to Hyderabad': 940, 'Ahmedabad to Kolkata': 1650, 'Ahmedabad to Chennai': 1850
 }
 
+
 def get_travel_season(month):
-    if month in [12, 1, 2]: return 'Winter'
-    elif month in [3, 4, 5]: return 'Spring'
-    elif month in [6, 7, 8]: return 'Summer'
-    elif month in [9, 10, 11]: return 'Autumn'
-    else: return 'Unknown'
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    elif month in [9, 10, 11]:
+        return 'Autumn'
+    else:
+        return 'Unknown'
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -56,7 +62,7 @@ def predict():
         departure_hour = int(data["departure_hour"])
         arrival_hour = int(data["arrival_hour"])
         travel_season = get_travel_season(month_journey)
-        
+
         # Class features
         travel_class = data["travel_class"].lower()
         is_economy_class = 1 if travel_class == "economy" else 0
@@ -95,9 +101,10 @@ def predict():
         # Predict fare
         predicted_fare = model_pipeline.predict(input_data)[0]
         return jsonify({"fare": round(predicted_fare, 2)})
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
+# Export the app for Vercel
+app = app
